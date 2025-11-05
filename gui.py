@@ -25,7 +25,7 @@ class MeetingRecorderGUI:
         try:
             self.summarizer = Summarizer()
             self.summarizer_available = True
-        except ValueError as e:
+        except (ValueError, ImportError) as e:
             print(f"Summarizer not available: {e}")
             self.summarizer_available = False
 
@@ -131,7 +131,10 @@ class MeetingRecorderGUI:
         self.refresh_meetings_list()
 
         if not self.summarizer_available:
-            self.log("Warning: Summarizer not configured. Please set ANTHROPIC_API_KEY in .env file")
+            self.log("Warning: Summarizer not available. Please install Ollama and download a model:")
+            self.log("  1. Install Ollama: https://ollama.com/download")
+            self.log("  2. Download model: ollama pull llama3.2")
+            self.log("  3. Start Ollama: ollama serve")
 
     def toggle_recording(self):
         """Toggle recording on/off."""
@@ -244,7 +247,11 @@ class MeetingRecorderGUI:
         """Summarize the last transcript."""
         if not self.summarizer_available:
             messagebox.showwarning("Summarizer Not Available",
-                                 "Please configure ANTHROPIC_API_KEY in .env file")
+                                 "Ollama is not configured.\n\n"
+                                 "1. Install Ollama: https://ollama.com/download\n"
+                                 "2. Download model: ollama pull llama3.2\n"
+                                 "3. Start Ollama: ollama serve\n"
+                                 "4. Restart this application")
             return
 
         if not self.current_meeting_id:

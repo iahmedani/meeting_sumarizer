@@ -1,29 +1,71 @@
-"""AI-powered meeting summarization module."""
+"""AI-powered meeting summarization module using local Ollama models."""
 import os
-from anthropic import Anthropic
 from dotenv import load_dotenv
+
+try:
+    import ollama
+    OLLAMA_AVAILABLE = True
+except ImportError:
+    OLLAMA_AVAILABLE = False
 
 # Load environment variables
 load_dotenv()
 
 
 class Summarizer:
-    """Summarizer for generating meeting summaries using Claude AI."""
+    """Summarizer for generating meeting summaries using local Ollama models."""
 
-    def __init__(self, api_key=None):
+    def __init__(self, model_name=None, base_url=None):
         """
         Initialize the summarizer.
 
         Args:
-            api_key: Anthropic API key (if not provided, will use env var)
+            model_name: Ollama model name (default: from env or 'llama3.2')
+            base_url: Ollama server URL (default: http://localhost:11434)
         """
-        self.api_key = api_key or os.getenv('ANTHROPIC_API_KEY')
-        if not self.api_key:
-            raise ValueError(
-                "Anthropic API key not found. Please set ANTHROPIC_API_KEY "
-                "environment variable or pass api_key parameter."
+        if not OLLAMA_AVAILABLE:
+            raise ImportError(
+                "Ollama package not installed. Please run: pip install ollama"
             )
-        self.client = Anthropic(api_key=self.api_key)
+
+        self.model_name = model_name or os.getenv('OLLAMA_MODEL', 'llama3.2')
+        self.base_url = base_url or os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
+
+        # Configure ollama client if base_url is provided
+        if self.base_url != 'http://localhost:11434':
+            self.client = ollama.Client(host=self.base_url)
+        else:
+            self.client = ollama
+
+        print(f"Using Ollama model: {self.model_name}")
+        self._check_model_availability()
+
+    def _check_model_availability(self):
+        """Check if the specified model is available locally."""
+        try:
+            # List available models
+            models = self.client.list()
+            available_models = [model['name'] for model in models.get('models', [])]
+
+            # Check if our model is available (match on base name)
+            model_base = self.model_name.split(':')[0]
+            model_available = any(model_base in m for m in available_models)
+
+            if not model_available:
+                print(f"\n⚠️  Warning: Model '{self.model_name}' not found locally.")
+                print(f"   Available models: {', '.join(available_models) if available_models else 'None'}")
+                print(f"\n   To download the model, run:")
+                print(f"   ollama pull {self.model_name}")
+                print(f"\n   Recommended models:")
+                print(f"   - llama3.2 (small, fast)")
+                print(f"   - llama3.2:3b (good balance)")
+                print(f"   - llama3.1:8b (better quality)")
+                print(f"   - mistral (alternative)")
+                print(f"   - qwen2.5:7b (multilingual)")
+
+        except Exception as e:
+            print(f"\n⚠️  Could not check model availability: {e}")
+            print(f"   Make sure Ollama is running: ollama serve")
 
     def generate_summary(self, transcript, meeting_title=None, custom_prompt=None):
         """
@@ -42,27 +84,33 @@ class Summarizer:
         else:
             prompt = self._build_default_prompt(transcript, meeting_title)
 
-        print("Generating meeting summary with AI...")
+        print("Generating meeting summary with local Ollama model...")
+        print(f"Using model: {self.model_name}")
 
         try:
-            message = self.client.messages.create(
-                model="claude-3-5-sonnet-20241022",
-                max_tokens=2000,
-                messages=[
-                    {"role": "user", "content": prompt}
-                ]
+            response = self.client.generate(
+                model=self.model_name,
+                prompt=prompt,
+                options={
+                    'temperature': 0.7,
+                    'num_predict': 2000,  # Max tokens to generate
+                }
             )
 
-            summary = message.content[0].text
+            summary = response['response']
             print("Summary generated successfully!")
 
             return {
                 'summary': summary,
-                'model': 'claude-3-5-sonnet-20241022'
+                'model': self.model_name
             }
 
         except Exception as e:
             print(f"Error generating summary: {e}")
+            print("\nTroubleshooting:")
+            print("1. Make sure Ollama is running: ollama serve")
+            print(f"2. Make sure the model is downloaded: ollama pull {self.model_name}")
+            print("3. Check if Ollama is accessible at:", self.base_url)
             raise
 
     def _build_default_prompt(self, transcript, meeting_title):

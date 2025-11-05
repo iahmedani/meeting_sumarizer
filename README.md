@@ -1,33 +1,72 @@
 # Meeting Recorder, Transcriber & Summarizer 🎙️
 
-A comprehensive desktop application for recording meetings, transcribing audio to text using AI (Whisper), and generating intelligent summaries using Claude AI. Similar to Notion's meeting capabilities but runs entirely on your laptop!
+A comprehensive desktop application for recording meetings, transcribing audio to text using AI (Whisper), and generating intelligent summaries using local Ollama models. Similar to Notion's meeting capabilities but runs **completely locally** on your laptop with full privacy!
 
 ## Features ✨
 
 - 🎤 **Audio Recording**: High-quality audio recording with real-time timer
-- 📝 **AI Transcription**: Automatic speech-to-text using OpenAI's Whisper model
-- 🤖 **Smart Summaries**: AI-powered meeting summaries with key points, decisions, and action items
+- 📝 **AI Transcription**: Automatic speech-to-text using OpenAI's Whisper model (local)
+- 🤖 **Smart Summaries**: AI-powered meeting summaries using local Ollama models (Llama, Mistral, etc.)
 - 💾 **Database Storage**: SQLite database to organize and track all your meetings
 - 🖥️ **Dual Interface**: Both GUI (tkinter) and CLI interfaces available
 - 📊 **Meeting Management**: View, organize, and search through past meetings
+- 🔒 **100% Private**: All processing happens locally on your machine
 
 ## Requirements
 
 - Python 3.8 or higher
 - Microphone for audio recording
-- 4GB+ RAM recommended (for Whisper model)
-- Anthropic API key (for AI summarization)
+- 8GB+ RAM recommended (4GB minimum for small models)
+- **Ollama installed** (for AI summarization)
 
 ## Installation
 
-### 1. Clone the Repository
+### 1. Install Ollama
+
+First, install Ollama on your system:
+
+#### Linux & macOS
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+#### Windows
+Download from: https://ollama.com/download/windows
+
+#### Verify Ollama Installation
+```bash
+ollama --version
+```
+
+### 2. Download an AI Model
+
+Pull a model for summarization (choose one):
+
+```bash
+# Small & fast (recommended for 8GB RAM)
+ollama pull llama3.2
+
+# Balanced performance (good for 16GB+ RAM)
+ollama pull llama3.2:3b
+
+# Better quality (requires 16GB+ RAM)
+ollama pull llama3.1:8b
+
+# Alternative: Mistral
+ollama pull mistral
+
+# Multilingual support
+ollama pull qwen2.5:7b
+```
+
+### 3. Clone the Repository
 
 ```bash
 git clone <repository-url>
 cd meeting_sumarizer
 ```
 
-### 2. Install System Dependencies
+### 4. Install System Dependencies
 
 #### Linux (Ubuntu/Debian)
 ```bash
@@ -43,42 +82,53 @@ brew install portaudio
 #### Windows
 PyAudio will be installed via pip (may require Microsoft C++ Build Tools)
 
-### 3. Create Virtual Environment
+### 5. Run Setup Script (Automated)
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+bash setup.sh
 ```
 
-### 4. Install Python Dependencies
+Or manually:
 
 ```bash
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install Python dependencies
 pip install -r requirements.txt
 ```
 
-**Note**: The first time you run the transcription, Whisper will download the model (~150MB for 'base' model).
+### 6. Configure (Optional)
 
-### 5. Set Up API Keys
+Copy and edit the environment file if you want to use a different model:
 
-1. Copy the example environment file:
 ```bash
 cp .env.example .env
 ```
 
-2. Edit `.env` and add your Anthropic API key:
+Edit `.env` to change the model:
+```bash
+OLLAMA_MODEL=llama3.2:3b
+OLLAMA_BASE_URL=http://localhost:11434
 ```
-ANTHROPIC_API_KEY=your_actual_api_key_here
-```
-
-Get your API key from: https://console.anthropic.com/
 
 ## Usage
+
+### Start Ollama Server
+
+Make sure Ollama is running (usually starts automatically):
+
+```bash
+ollama serve
+```
 
 ### GUI Application (Recommended)
 
 Launch the graphical interface:
 
 ```bash
+source venv/bin/activate  # If not already activated
 python gui.py
 ```
 
@@ -86,8 +136,8 @@ python gui.py
 - Click "Start Recording" to begin recording a meeting
 - Enter a descriptive meeting title
 - Click "Stop Recording" when done
-- Click "Transcribe" to convert audio to text
-- Click "Summarize" to generate an AI summary
+- Click "Transcribe" to convert audio to text (runs locally with Whisper)
+- Click "Summarize" to generate an AI summary (runs locally with Ollama)
 - View all past meetings in the list below
 - Select a meeting and click "View Details" to see full information
 
@@ -112,14 +162,15 @@ python cli.py
 ```
 meeting_sumarizer/
 ├── audio_recorder.py      # Audio recording module
-├── transcriber.py         # Speech-to-text transcription
-├── summarizer.py          # AI-powered summarization
+├── transcriber.py         # Speech-to-text transcription (Whisper)
+├── summarizer.py          # AI-powered summarization (Ollama)
 ├── database.py            # SQLite database management
 ├── gui.py                 # Tkinter GUI application
 ├── cli.py                 # Command-line interface
 ├── requirements.txt       # Python dependencies
 ├── .env.example          # Environment variables template
 ├── .gitignore            # Git ignore rules
+├── setup.sh              # Automated setup script
 └── README.md             # This file
 
 # Generated folders (created automatically):
@@ -136,8 +187,9 @@ meeting_sumarizer/
 - Records in 16kHz mono WAV format (optimal for Whisper)
 - Saves recordings in the `recordings/` directory
 
-### 2. Transcription
+### 2. Transcription (Local)
 - Uses OpenAI's Whisper model for speech recognition
+- Runs completely locally on your machine
 - Supports multiple model sizes:
   - `tiny` - Fastest, least accurate (~40MB)
   - `base` - Good balance (default, ~150MB)
@@ -147,8 +199,9 @@ meeting_sumarizer/
 - Generates timestamped transcripts
 - Saves transcripts in the `transcripts/` directory
 
-### 3. Summarization
-- Uses Claude AI (Anthropic) for intelligent summarization
+### 3. Summarization (Local with Ollama)
+- Uses Ollama for running local LLMs (Llama, Mistral, etc.)
+- **Completely private** - no data sent to external servers
 - Generates structured summaries with:
   - Executive Summary
   - Key Discussion Points
@@ -177,11 +230,63 @@ self.transcriber = Transcriber(model_size='small')  # Change to tiny/base/small/
 - **small**: Balanced option for most use cases
 - **medium/large**: High accuracy for important meetings, technical discussions
 
+### Change Ollama Model
+
+You can use different Ollama models for summarization:
+
+```bash
+# List available models
+ollama list
+
+# Pull a different model
+ollama pull mistral
+
+# Set in .env file
+echo "OLLAMA_MODEL=mistral" > .env
+```
+
+Or pass it when initializing:
+```python
+summarizer = Summarizer(model_name='mistral')
+```
+
+**Recommended Ollama Models:**
+- **llama3.2** - Small, fast (1-3B parameters)
+- **llama3.2:3b** - Good balance
+- **llama3.1:8b** - Better quality, needs more RAM
+- **mistral** - Good alternative, efficient
+- **qwen2.5:7b** - Multilingual support
+
 ### Customize Summarization Prompt
 
 Edit the `_build_default_prompt()` method in `summarizer.py` to customize how summaries are generated.
 
 ## Troubleshooting
+
+### Ollama Issues
+
+**Problem**: "Could not connect to Ollama"
+```bash
+# Check if Ollama is running
+ollama list
+
+# Start Ollama server
+ollama serve
+```
+
+**Problem**: "Model not found"
+```bash
+# List available models
+ollama list
+
+# Pull the model you need
+ollama pull llama3.2
+```
+
+**Problem**: Summarization is slow
+- Use a smaller model: `llama3.2` instead of `llama3.1:8b`
+- Close other applications to free up RAM
+- Ensure Ollama has enough memory allocated
 
 ### Audio Recording Issues
 
@@ -205,15 +310,38 @@ python -c "from audio_recorder import AudioRecorder; AudioRecorder.list_audio_de
 - Use GPU acceleration if available (requires CUDA setup)
 - Use smaller model for faster processing
 
-### Summarization Issues
+## Performance & System Requirements
 
-**Problem**: "API key not found"
-- Ensure `.env` file exists with valid `ANTHROPIC_API_KEY`
-- Run `source .env` or restart the application
+### Minimum Requirements
+- **CPU**: Dual-core processor
+- **RAM**: 4GB (for tiny/base models)
+- **Storage**: 5GB free space
 
-**Problem**: API rate limits
-- The application uses Claude 3.5 Sonnet model
-- Check your API usage limits at console.anthropic.com
+### Recommended Specs
+- **CPU**: Quad-core or better
+- **RAM**: 8GB+ (16GB for larger models)
+- **Storage**: 10GB+ free space
+- **GPU**: Optional, but significantly speeds up transcription with CUDA support
+
+### Processing Times (Approximate)
+- **Recording**: Real-time
+- **Transcription** (base model): ~1-2 minutes per 10 minutes of audio
+- **Summarization** (llama3.2): ~10-30 seconds depending on transcript length
+
+## Privacy & Security
+
+- **100% Local Processing**: All audio recording, transcription, and summarization happens on your machine
+- **No Internet Required**: After initial setup, works completely offline
+- **Your Data Stays Private**: No data sent to external servers or APIs
+- **Open Source Models**: Uses open-source Whisper and Ollama models
+
+## Cost
+
+**Completely FREE!**
+- No API fees
+- No subscriptions
+- No cloud costs
+- Open-source software
 
 ## Tips for Best Results
 
@@ -229,22 +357,12 @@ python -c "from audio_recorder import AudioRecorder; AudioRecorder.list_audio_de
 3. **Better Summaries**
    - Include meaningful meeting titles
    - Ensure transcription is accurate before summarizing
-   - Edit summaries if needed for your specific use case
+   - Use larger Ollama models for more detailed summaries
 
-## Privacy & Security
-
-- All processing happens locally except for AI summarization (which uses Anthropic's API)
-- Audio files and transcripts are stored only on your computer
-- API keys are stored in `.env` file (not committed to git)
-- No data is shared with third parties beyond the summarization API
-
-## Cost Considerations
-
-- **Recording & Transcription**: Free (runs locally using Whisper)
-- **Summarization**: Uses Anthropic Claude API (paid)
-  - Typical cost: ~$0.003-0.015 per meeting summary
-  - Based on transcript length and model used
-  - Check current pricing at: https://www.anthropic.com/pricing
+4. **Performance Optimization**
+   - Close unnecessary applications during processing
+   - Use SSD for faster file operations
+   - Consider GPU acceleration for Whisper if available
 
 ## Future Enhancements
 
@@ -255,8 +373,9 @@ Potential features for future versions:
 - [ ] Integration with calendar apps
 - [ ] Speaker diarization (identify different speakers)
 - [ ] Search functionality across all meetings
-- [ ] Cloud sync options
+- [ ] Cloud sync options (optional)
 - [ ] Mobile app companion
+- [ ] Web interface option
 
 ## Contributing
 
@@ -270,17 +389,22 @@ This project is open source and available under the MIT License.
 
 For issues, questions, or suggestions:
 1. Check the Troubleshooting section above
-2. Search existing issues on GitHub
-3. Create a new issue with detailed information
+2. Ensure Ollama is installed and running: `ollama list`
+3. Ensure your model is downloaded: `ollama pull llama3.2`
+4. Search existing issues on GitHub
+5. Create a new issue with detailed information
 
 ## Acknowledgments
 
-- **OpenAI Whisper**: For the excellent speech recognition model
-- **Anthropic Claude**: For powerful AI summarization capabilities
+- **OpenAI Whisper**: For the excellent open-source speech recognition model
+- **Ollama**: For making local LLM inference accessible and easy
+- **Meta (Llama)** & **Mistral AI**: For the open-source language models
 - **Python Community**: For the amazing libraries that made this possible
 
 ---
 
 **Happy Meeting Recording! 🎉**
+
+**100% Private. 100% Local. 100% Free.**
 
 If you find this useful, please give it a star ⭐
