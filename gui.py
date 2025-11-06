@@ -221,10 +221,11 @@ class MeetingRecorderGUI:
                 # Update database
                 self.db.update_meeting(self.current_meeting_id, transcript_path=transcript_path)
 
-                self.root.after(0, lambda: self.on_transcription_complete(transcript_text))
+                self.root.after(0, lambda text=transcript_text: self.on_transcription_complete(text))
 
             except Exception as e:
-                self.root.after(0, lambda: self.on_transcription_error(str(e)))
+                error_msg = str(e)
+                self.root.after(0, lambda msg=error_msg: self.on_transcription_error(msg))
 
         thread = threading.Thread(target=transcribe_thread, daemon=True)
         thread.start()
@@ -285,10 +286,11 @@ class MeetingRecorderGUI:
                 # Update database
                 self.db.update_meeting(self.current_meeting_id, summary=summary_text)
 
-                self.root.after(0, lambda: self.on_summarization_complete(summary_text))
+                self.root.after(0, lambda text=summary_text: self.on_summarization_complete(text))
 
             except Exception as e:
-                self.root.after(0, lambda: self.on_summarization_error(str(e)))
+                error_msg = str(e)
+                self.root.after(0, lambda msg=error_msg: self.on_summarization_error(msg))
 
         thread = threading.Thread(target=summarize_thread, daemon=True)
         thread.start()
