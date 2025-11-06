@@ -17,7 +17,8 @@ A comprehensive desktop application for recording meetings, transcribing audio t
 - Python 3.8 or higher
 - Microphone for audio recording
 - 8GB+ RAM recommended (4GB minimum for small models)
-- **Ollama installed** (for AI summarization)
+- **FFmpeg** (required for audio processing)
+- **Ollama** (for AI summarization)
 
 ## Installation
 
@@ -68,19 +69,27 @@ cd meeting_sumarizer
 
 ### 4. Install System Dependencies
 
+#### macOS
+```bash
+# Install audio dependencies and ffmpeg (required for Whisper)
+brew install portaudio ffmpeg
+```
+
 #### Linux (Ubuntu/Debian)
 ```bash
 sudo apt-get update
-sudo apt-get install -y python3-pyaudio portaudio19-dev
-```
-
-#### macOS
-```bash
-brew install portaudio
+sudo apt-get install -y python3-pyaudio portaudio19-dev ffmpeg
 ```
 
 #### Windows
-PyAudio will be installed via pip (may require Microsoft C++ Build Tools)
+```bash
+# Install ffmpeg using Chocolatey
+choco install ffmpeg
+
+# Or download from: https://ffmpeg.org/download.html
+```
+
+**Note**: FFmpeg is required for Whisper to process audio files. Make sure it's installed before running transcription.
 
 ### 5. Run Setup Script (Automated)
 
@@ -301,6 +310,22 @@ python -c "from audio_recorder import AudioRecorder; AudioRecorder.list_audio_de
 - **Linux**: Ensure user is in `audio` group: `sudo usermod -a -G audio $USER`
 
 ### Transcription Issues
+
+**Problem**: "[Errno 2] No such file or directory: 'ffmpeg'"
+```bash
+# macOS
+brew install ffmpeg
+
+# Linux
+sudo apt-get install ffmpeg
+
+# Windows
+choco install ffmpeg
+# Or download from https://ffmpeg.org/download.html
+
+# Verify installation
+ffmpeg -version
+```
 
 **Problem**: "Out of memory" error
 - Use a smaller Whisper model (`tiny` or `base`)

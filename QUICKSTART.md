@@ -38,7 +38,32 @@ ollama pull llama3.2:3b
 
 **Wait for download to complete** (1-4GB depending on model)
 
-## Step 3: Install Meeting Recorder (3 minutes)
+## Step 3: Install FFmpeg (Required for Whisper)
+
+FFmpeg is required for audio transcription with Whisper.
+
+### macOS
+```bash
+brew install ffmpeg
+```
+
+### Linux (Ubuntu/Debian)
+```bash
+sudo apt-get install ffmpeg
+```
+
+### Windows
+```bash
+choco install ffmpeg
+# Or download from: https://ffmpeg.org/download.html
+```
+
+### Verify Installation
+```bash
+ffmpeg -version
+```
+
+## Step 4: Install Meeting Recorder (3 minutes)
 
 ```bash
 # 1. Run the setup script
@@ -52,7 +77,7 @@ cp .env.example .env
 # Edit .env if you want to use a different model
 ```
 
-## Step 4: Start Recording!
+## Step 5: Start Recording!
 
 ### Make sure Ollama is running:
 ```bash

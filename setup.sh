@@ -16,6 +16,44 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# Check for ffmpeg
+echo ""
+echo "Checking for ffmpeg..."
+if command -v ffmpeg &> /dev/null; then
+    echo "✅ ffmpeg is installed"
+    ffmpeg -version | head -n 1
+else
+    echo "⚠️  Warning: ffmpeg is not installed"
+    echo "   ffmpeg is required for audio transcription with Whisper"
+    echo ""
+    echo "   To install ffmpeg:"
+    echo "   macOS:   brew install ffmpeg"
+    echo "   Linux:   sudo apt-get install ffmpeg"
+    echo "   Windows: choco install ffmpeg"
+    echo ""
+    read -p "Continue anyway? (y/n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
+fi
+
+# Check for Ollama
+echo ""
+echo "Checking for Ollama..."
+if command -v ollama &> /dev/null; then
+    echo "✅ Ollama is installed"
+    ollama --version
+else
+    echo "⚠️  Warning: Ollama is not installed"
+    echo "   Ollama is required for AI summarization"
+    echo ""
+    echo "   To install Ollama:"
+    echo "   Linux/macOS: curl -fsSL https://ollama.com/install.sh | sh"
+    echo "   Windows:     https://ollama.com/download/windows"
+    echo ""
+fi
+
 # Create virtual environment
 echo ""
 echo "Creating virtual environment..."
@@ -51,7 +89,7 @@ if [ ! -f .env ]; then
     echo ""
     echo "Creating .env file from template..."
     cp .env.example .env
-    echo "⚠️  Please edit .env and add your ANTHROPIC_API_KEY"
+    echo "ℹ️  You can edit .env to change the Ollama model (default: llama3.2)"
 fi
 
 # Create necessary directories
@@ -65,8 +103,11 @@ echo "✅ Setup completed successfully!"
 echo "=================================="
 echo ""
 echo "Next steps:"
-echo "1. Edit .env file and add your ANTHROPIC_API_KEY"
-echo "2. Activate the virtual environment: source venv/bin/activate"
-echo "3. Run the GUI: python gui.py"
+echo "1. Make sure ffmpeg is installed: ffmpeg -version"
+echo "2. Make sure Ollama is installed: ollama --version"
+echo "3. Download an Ollama model: ollama pull llama3.2"
+echo "4. Start Ollama server: ollama serve"
+echo "5. Activate the virtual environment: source venv/bin/activate"
+echo "6. Run the GUI: python gui.py"
 echo "   OR run the CLI: python cli.py"
 echo ""
