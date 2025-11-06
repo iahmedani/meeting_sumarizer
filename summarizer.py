@@ -44,14 +44,25 @@ class Summarizer:
         """Check if the specified model is available locally."""
         try:
             # List available models
-            models = self.client.list()
-            available_models = [model['name'] for model in models.get('models', [])]
+            models_response = self.client.list()
+
+            # Handle different response formats
+            available_models = []
+            if isinstance(models_response, dict) and 'models' in models_response:
+                for model in models_response['models']:
+                    # Handle both dict and object formats
+                    if isinstance(model, dict):
+                        model_name = model.get('name', model.get('model', ''))
+                    else:
+                        model_name = getattr(model, 'name', getattr(model, 'model', ''))
+                    if model_name:
+                        available_models.append(model_name)
 
             # Check if our model is available (match on base name)
             model_base = self.model_name.split(':')[0]
             model_available = any(model_base in m for m in available_models)
 
-            if not model_available:
+            if not model_available and available_models:
                 print(f"\n⚠️  Warning: Model '{self.model_name}' not found locally.")
                 print(f"   Available models: {', '.join(available_models) if available_models else 'None'}")
                 print(f"\n   To download the model, run:")
@@ -62,10 +73,13 @@ class Summarizer:
                 print(f"   - llama3.1:8b (better quality)")
                 print(f"   - mistral (alternative)")
                 print(f"   - qwen2.5:7b (multilingual)")
+            elif model_available:
+                print(f"✓ Model '{self.model_name}' is available")
 
         except Exception as e:
             print(f"\n⚠️  Could not check model availability: {e}")
             print(f"   Make sure Ollama is running: ollama serve")
+            print(f"   You can still try to use the model - it may work anyway.")
 
     def generate_summary(self, transcript, meeting_title=None, custom_prompt=None):
         """
